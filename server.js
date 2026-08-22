@@ -185,7 +185,7 @@ app.post("/chat", async (req, res) => {
     });
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-3.5-flash-lite",
       contents: [
         {
           role: "user",
