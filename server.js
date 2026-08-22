@@ -4,7 +4,7 @@ require("dotenv").config();
 const { GoogleGenAI } = require("@google/genai");
 
 const app = express();
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
 console.log(
   "GEMINI KEY:",
@@ -185,7 +185,7 @@ app.post("/chat", async (req, res) => {
     });
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       contents: [
         {
           role: "user",
@@ -250,6 +250,6 @@ app.post("/chat", async (req, res) => {
 }
 });
 
-app.listen(PORT, () => {
-  console.log(`🔥 Backend running at http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🔥 Backend running on port ${PORT}`);
 });
