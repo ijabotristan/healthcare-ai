@@ -188,7 +188,7 @@ app.post("/chat", async (req, res) => {
 
 try {
   response = await ai.models.generateContent({
-    model: "gemini-3.5-flash-lite",
+    model: "gemini-3.1-flash-lite",
     contents: [
       {
         role: "user",
@@ -211,7 +211,7 @@ try {
   console.log("⚠️ 3.5 Flash Lite quota reached. Trying backup...");
 
   response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-lite",
+    model: "gemini-3.5-flash-lite",
     contents: [
       {
         role: "user",
