@@ -288,19 +288,30 @@ const HEALTH_URL = `${BACKEND_URL}/health`;
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: sessionId, message }),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        let errText = text;
-        try {
-          const j = JSON.parse(text);
-          errText = j.detail || j.error || text;
-        } catch (e) {
-          // not JSON — keep raw text
-        }
-        addMessage("Server error: " + errText, "assistant");
-        return;
-      }
+      });if (!res.ok) {
+  const text = await res.text();
+
+  let errText = "Something went wrong.";
+
+  try {
+    const j = JSON.parse(text);
+
+    if (res.status === 429) {
+      errText = "AI quota temporarily reached. Please try again later.";
+    } else {
+      errText = j.reply || j.detail || j.error || "AI service error.";
+    }
+  } catch (e) {
+    if (res.status === 429) {
+      errText = "AI quota temporarily reached. Please try again later.";
+    } else {
+      errText = "AI service temporarily unavailable.";
+    }
+  }
+
+  addMessage(errText, "assistant");
+  return;
+}
 
       const data = await res.json();
       addMessage(data.reply, "assistant");
