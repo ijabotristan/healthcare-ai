@@ -178,109 +178,52 @@ app.post("/chat", async (req, res) => {
 
     return res.json({ reply });
   }
-try {
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY
-  });
-
-  let response;
 
   try {
-    // 🥇 MAIN MODEL
-    response = await ai.models.generateContent({
-      model: "gemini-3.5-flash-lite",
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
-        ...history
-      ]
+    const ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY
     });
 
-  } catch (primaryError) {
+   let response;
 
-    const isQuotaError =
-      primaryError?.status === 429 ||
-      primaryError?.code === 429 ||
-      String(primaryError?.message || "").includes("429") ||
-      String(primaryError?.message || "").includes("RESOURCE_EXHAUSTED");
+try {
+  response = await ai.models.generateContent({
+    model: "gemini-3.5-flash-lite",
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: SYSTEM_PROMPT }]
+      },
+      ...history
+    ]
+  });
+} catch (primaryError) {
+  const isQuotaError =
+    primaryError?.status === 429 ||
+    primaryError?.code === 429 ||
+    String(primaryError?.message || "").includes("429") ||
+    String(primaryError?.message || "").includes("RESOURCE_EXHAUSTED");
 
-    if (!isQuotaError) {
-      throw primaryError;
-    }
-
-    console.log("⚠️ 3.5 Flash Lite quota reached — switching to 3.1 Flash Lite...");
-
-    // 🥈 BACKUP MODEL
-    response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: SYSTEM_PROMPT }]
-        },
-        ...history
-      ]
-    });
+  if (!isQuotaError) {
+    throw primaryError;
   }
 
-  const reply =
-    extractGeminiText(response) ||
-    buildFallbackReply(message);
+  console.log("⚠️ 3.5 Flash Lite quota reached. Trying backup...");
 
-  console.log("🤖 GEMINI RESPONSE:", reply);
-
-  history.push({
-    role: "model",
-    parts: [{ text: reply }]
+  response = await ai.models.generateContent({
+    model: "gemini-3.1-flash-lite",
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: SYSTEM_PROMPT }]
+      },
+      ...history
+    ]
   });
-
-  conversations.set(sessionId, history);
-
-  return res.json({ reply });
-
-} catch (error) {
-
+}
+  } catch (error) {
   console.error("💥 GEMINI ERROR:", error);
 
-  // Both models unavailable / quota exhausted
-  if (
-    error?.status === 429 ||
-    error?.code === 429 ||
-    String(error?.message || "").includes("429") ||
-    String(error?.message || "").includes("RESOURCE_EXHAUSTED")
-  ) {
-    return res.status(200).json({
-      reply: "AI quota temporarily reached. Please try again later."
-    });
-  }
-
-  // Gemini authentication error
-  if (
-    error?.status === 401 ||
-    error?.code === 401 ||
-    String(error?.message || "").includes("401") ||
-    String(error?.message || "").includes("UNAUTHENTICATED")
-  ) {
-    return res.status(500).json({
-      reply: "AI authentication error. Please contact the administrator."
-    });
-  }
-
-  const fallbackReply = buildFallbackReply(message);
-
-  history.push({
-    role: "model",
-    parts: [{ text: fallbackReply }]
-  });
-
-  conversations.set(sessionId, history);
-
-  return res.status(200).json({
-    reply: `${fallbackReply} (The AI service is temporarily unavailable.)`
-  });
-} 
   // Gemini quota exceeded
   if (
     error?.status === 429 ||
