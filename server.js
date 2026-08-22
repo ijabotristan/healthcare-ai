@@ -217,7 +217,7 @@ app.post("/chat", async (req, res) => {
     String(error?.message || "").includes("429") ||
     String(error?.message || "").includes("RESOURCE_EXHAUSTED")
   ) {
-    return res.status(429).json({
+    return res.status(200).json({
       reply: "AI quota temporarily reached. Please try again later."
     });
   }
