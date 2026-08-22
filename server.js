@@ -184,70 +184,17 @@ app.post("/chat", async (req, res) => {
       apiKey: process.env.GEMINI_API_KEY
     });
 
-   const mainModel = process.env.GEMINI_MODEL || "gemini-3.6-flash";
-const backupModel = "gemini-3.1-flash-lite";
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: SYSTEM_PROMPT }]
+        },
+        ...history
+      ]
+    });
 
-let response;
-
-try {
-  // Try the main model first
-  response = await ai.models.generateContent({
-    model: mainModel,
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: SYSTEM_PROMPT }]
-      },
-      ...history
-    ]
-  });
-
-} catch (mainError) {
-
-  // Main model quota reached → automatically try backup
-  if (
-    mainError?.status === 429 ||
-    mainError?.code === 429 ||
-    String(mainError?.message || "").includes("429") ||
-    String(mainError?.message || "").includes("RESOURCE_EXHAUSTED")
-  ) {
-    console.log("⚠️ Main model quota reached. Switching to backup...");
-
-    try {
-      response = await ai.models.generateContent({
-        model: backupModel,
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: SYSTEM_PROMPT }]
-          },
-          ...history
-        ]
-      });
-
-    } catch (backupError) {
-
-      // Both models exhausted
-      if (
-        backupError?.status === 429 ||
-        backupError?.code === 429 ||
-        String(backupError?.message || "").includes("429") ||
-        String(backupError?.message || "").includes("RESOURCE_EXHAUSTED")
-      ) {
-        console.log("🚫 Both Gemini models are out of quota.");
-
-        return res.status(200).json({
-          reply: "AI quota temporarily reached. Please try again later."
-        });
-      }
-
-      throw backupError;
-    }
-
-  } else {
-    throw mainError;
-  }
-}
     const reply = extractGeminiText(response) || buildFallbackReply(message);
 
     console.log("🤖 GEMINI RESPONSE:", reply);
