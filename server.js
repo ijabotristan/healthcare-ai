@@ -211,7 +211,7 @@ try {
 
   console.log("⚠️ 3.5 Flash Lite quota reached. Trying backup...");
   console.log("🚀 Calling backup Gemini...");
-
+console.log("🚀 CALLING GEMINI NOW");
 
   response = await ai.models.generateContent({
     model: "gemini-3.1-flash-lite",
