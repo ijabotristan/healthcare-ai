@@ -208,19 +208,46 @@ app.post("/chat", async (req, res) => {
 
     return res.json({ reply });
   } catch (error) {
-    console.error("💥 GEMINI ERROR:", error);
+  console.error("💥 GEMINI ERROR:", error);
 
-    const fallbackReply = buildFallbackReply(message);
-    history.push({
-      role: "model",
-      parts: [{ text: fallbackReply }]
-    });
-    conversations.set(sessionId, history);
-
-    return res.status(200).json({
-      reply: `${fallbackReply} (The AI service is temporarily unavailable, so this is a safe local fallback.)`
+  // Gemini quota exceeded
+  if (
+    error?.status === 429 ||
+    error?.code === 429 ||
+    String(error?.message || "").includes("429") ||
+    String(error?.message || "").includes("RESOURCE_EXHAUSTED")
+  ) {
+    return res.status(429).json({
+      reply: "AI quota temporarily reached. Please try again later."
     });
   }
+
+  // Gemini authentication error
+  if (
+    error?.status === 401 ||
+    error?.code === 401 ||
+    String(error?.message || "").includes("401") ||
+    String(error?.message || "").includes("UNAUTHENTICATED")
+  ) {
+    return res.status(500).json({
+      reply: "AI authentication error. Please contact the administrator."
+    });
+  }
+
+  // Other errors
+  const fallbackReply = buildFallbackReply(message);
+
+  history.push({
+    role: "model",
+    parts: [{ text: fallbackReply }]
+  });
+
+  conversations.set(sessionId, history);
+
+  return res.status(200).json({
+    reply: `${fallbackReply} (The AI service is temporarily unavailable.)`
+  });
+}
 });
 
 app.listen(PORT, () => {
