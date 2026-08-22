@@ -146,7 +146,6 @@ app.post("/auth/login", (req, res) => {
 });
 
 app.post("/chat", async (req, res) => {
-  console.log("🟢 CHAT ROUTE REACHED");
   console.log("🔥 CHAT REQUEST:", req.body);
 
   const { session_id, message } = req.body || {};
@@ -185,45 +184,29 @@ app.post("/chat", async (req, res) => {
       apiKey: process.env.GEMINI_API_KEY
     });
 
-   let response;
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash-lite",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: SYSTEM_PROMPT }]
+        },
+        ...history
+      ]
+    });
 
-try {console.log("🚀 CALLING GEMINI NOW");
-  response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-lite",
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: SYSTEM_PROMPT }]
-      },
-      ...history
-    ]
-  });
-} catch (primaryError) {
-  const isQuotaError =
-    primaryError?.status === 429 ||
-    primaryError?.code === 429 ||
-    String(primaryError?.message || "").includes("429") ||
-    String(primaryError?.message || "").includes("RESOURCE_EXHAUSTED");
+    const reply = extractGeminiText(response) || buildFallbackReply(message);
 
-  if (!isQuotaError) {
-    throw primaryError;
-  }
+    console.log("🤖 GEMINI RESPONSE:", reply);
 
-  console.log("⚠️ 3.5 Flash Lite quota reached. Trying backup...");
-  console.log("🚀 Calling backup Gemini...");
-console.log("🚀 CALLING GEMINI NOW");
+    history.push({
+      role: "model",
+      parts: [{ text: reply }]
+    });
 
-  response = await ai.models.generateContent({
-    model: "gemini-3.1-flash-lite",
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: SYSTEM_PROMPT }]
-      },
-      ...history
-    ]
-  });console.log("✅ Backup Gemini answered!");
-}
+    conversations.set(sessionId, history);
+
+    return res.json({ reply });
   } catch (error) {
   console.error("💥 GEMINI ERROR:", error);
 
