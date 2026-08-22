@@ -146,6 +146,7 @@ app.post("/auth/login", (req, res) => {
 });
 
 app.post("/chat", async (req, res) => {
+  console.log("🟢 CHAT ROUTE REACHED");
   console.log("🔥 CHAT REQUEST:", req.body);
 
   const { session_id, message } = req.body || {};
