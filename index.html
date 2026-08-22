@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tristan Health Care Assistant</title>
+<style>
+  :root {
+    --bg: #eaf2ef;
+    --card: #ffffff;
+    --accent: #1f7a5c;
+    --accent-dark: #14523c;
+    --accent-light: #e7f3ee;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --line: #dfe8e4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    background: radial-gradient(circle at top left, #f8fbfa 0, var(--bg) 48%, #dcebe5 100%);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 32px 20px;
+    min-height: 100vh;
+  }
+  .auth-shell { width: 100%; max-width: 980px; display: grid; grid-template-columns: 0.9fr 1.1fr; background: var(--card); border-radius: 20px; overflow: hidden; box-shadow: 0 16px 50px rgba(20, 82, 60, 0.12); }
+  .auth-intro { padding: 54px 48px; color: white; background: var(--accent-dark); position: relative; }
+  .auth-intro::after { content: ""; position: absolute; width: 220px; height: 220px; border: 1px solid rgba(255,255,255,.22); border-radius: 50%; right: -70px; bottom: -60px; }
+  .brand-mark { font-size: 13px; letter-spacing: 1.8px; text-transform: uppercase; opacity: .8; }
+  .auth-intro h1 { font-size: clamp(34px, 4vw, 52px); font-weight: 400; line-height: 1; margin: 78px 0 18px; }
+  .auth-intro p { max-width: 290px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.7; color: #d5e9e0; }
+  .auth-panel { padding: 48px clamp(28px, 5vw, 72px); }
+  .auth-panel h2 { margin: 0; font-size: 30px; font-weight: 400; color: var(--accent-dark); }
+  .auth-panel .subhead { margin: 8px 0 30px; color: var(--muted); font-family: Arial, sans-serif; font-size: 13px; }
+  .auth-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--line); margin-bottom: 26px; }
+  .auth-tab { border: 0; border-radius: 0; background: transparent; color: var(--muted); padding: 0 0 12px; font-family: Arial, sans-serif; font-size: 14px; cursor: pointer; }
+  .auth-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+  .auth-form { display: grid; gap: 15px; font-family: Arial, sans-serif; }
+  .field { display: grid; gap: 7px; }
+  .field label { color: #374151; font-size: 12px; font-weight: 700; }
+  .field input { width: 100%; padding: 13px 14px; border: 1px solid #cfdcd6; border-radius: 8px; font: inherit; font-size: 14px; outline-color: var(--accent); }
+  .auth-submit { margin-top: 6px; width: 100%; }
+  .auth-message { min-height: 18px; margin: 0; color: #b42318; font: 12px Arial, sans-serif; }
+  .privacy-note { margin: 22px 0 0; color: var(--muted); font: 11px/1.5 Arial, sans-serif; }
+  .hidden { display: none !important; }
+  .app {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    background: var(--card);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  header {
+    padding: 18px 20px;
+    background: var(--accent);
+    color: white;
+  }
+  header h1 { margin: 0; font-size: 18px; }
+  header p { margin: 4px 0 0; font-size: 12px; opacity: 0.9; }
+  .disclaimer {
+    background: var(--accent-light);
+    color: #14523c;
+    font-size: 12px;
+    padding: 10px 20px;
+    border-bottom: 1px solid #d5e9e0;
+  }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    line-height: 1.4;
+    font-size: 14px;
+    white-space: pre-wrap;
+  }
+  .user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .assistant {
+    align-self: flex-start;
+    background: #f0f1f3;
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+  .muted { color: var(--muted); font-size: 12px; padding: 0 20px; }
+  form {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid #eee;
+  }
+  input[type=text] {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+  }
+  button {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  @media (max-width: 700px) {
+    body { padding: 0; align-items: stretch; }
+    .auth-shell { min-height: 100vh; grid-template-columns: 1fr; border-radius: 0; }
+    .auth-intro { padding: 30px 28px 25px; }
+    .auth-intro h1 { margin: 42px 0 12px; font-size: 38px; }
+    .auth-intro p { margin-bottom: 0; }
+    .auth-panel { padding: 34px 28px; }
+    .app { height: 100vh; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+  <main class="auth-shell" id="auth-shell">
+    <section class="auth-intro">
+      <div class="brand-mark">Tristan Health</div>
+      <h1>Care that starts with a conversation.</h1>
+      <p>A calm, private place to ask health questions and understand what kind of care might make sense.</p>
+    </section>
+    <section class="auth-panel">
+      <h2 id="auth-title">Welcome back</h2>
+      <p class="subhead" id="auth-subhead">Sign in to continue to your health assistant.</p>
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" id="login-tab" type="button" role="tab" aria-selected="true">Log in</button>
+        <button class="auth-tab" id="signup-tab" type="button" role="tab" aria-selected="false">Create account</button>
+      </div>
+      <form class="auth-form" id="auth-form">
+        <div class="field hidden" id="name-field"><label for="name">Your name</label><input id="name" type="text" autocomplete="name" /></div>
+        <div class="field"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" required /></div>
+        <div class="field"><label for="password">Password</label><input id="password" type="password" minlength="8" autocomplete="current-password" required /></div>
+        <p class="auth-message" id="auth-message" role="alert"></p>
+        <button class="auth-submit" id="auth-submit" type="submit">Log in</button>
+      </form>
+      <p class="privacy-note">For this learning project, account data is stored only in server memory and resets when the server restarts.</p>
+    </section>
+  </main>
+  <div class="app">
+    <header>
+      <h1>Tristan Health Care Assistant</h1>
+      <p>Learning project — not a substitute for professional medical care.</p>
+    </header>
+    <div class="disclaimer">
+      This tool gives general health information only. It does not diagnose
+      conditions. In an emergency, call your local emergency number immediately.
+    </div>
+    <div id="messages"></div>
+    <form id="chat-form">
+      <input type="text" id="input" placeholder="Ask a health question..." autocomplete="off" />
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+  </div>
+
+<script>const BACKEND_URL = "/.netlify/functions/api";
+const API_URL = `${BACKEND_URL}/chat`;
+const HEALTH_URL = `${BACKEND_URL}/health`;
+  const sessionId = crypto.randomUUID();
+  const authShell = document.getElementById("auth-shell");
+  const authForm = document.getElementById("auth-form");
+  const authMessage = document.getElementById("auth-message");
+  const authTitle = document.getElementById("auth-title");
+  const authSubhead = document.getElementById("auth-subhead");
+  const authSubmit = document.getElementById("auth-submit");
+  const nameField = document.getElementById("name-field");
+  const loginTab = document.getElementById("login-tab");
+  const signupTab = document.getElementById("signup-tab");
+  let authMode = "login";
+  const messagesEl = document.getElementById("messages");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("input");
+  const sendBtn = document.getElementById("send-btn");
+
+  document.querySelector(".app").classList.add("hidden");
+
+  function setAuthMode(mode) {
+    authMode = mode;
+    const signup = mode === "signup";
+    nameField.classList.toggle("hidden", !signup);
+    document.getElementById("name").required = signup;
+    loginTab.classList.toggle("active", !signup);
+    signupTab.classList.toggle("active", signup);
+    authTitle.textContent = signup ? "Create your account" : "Welcome back";
+    authSubhead.textContent = signup ? "Start a calmer way to navigate health questions." : "Sign in to continue to your health assistant.";
+    authSubmit.textContent = signup ? "Create account" : "Log in";
+    document.getElementById("password").autocomplete = signup ? "new-password" : "current-password";
+    authMessage.textContent = "";
+  }
+
+  loginTab.addEventListener("click", () => setAuthMode("login"));
+  signupTab.addEventListener("click", () => setAuthMode("signup"));
+
+  authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    authMessage.textContent = "";
+    authSubmit.disabled = true;
+    const payload = {
+      name: document.getElementById("name").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("password").value
+    };
+    try {
+      const response = await fetch(`${BACKEND_URL}/auth/${authMode}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error(responseText || "The server returned an invalid response.");
+      }
+      if (!response.ok) throw new Error(data.detail || "Unable to authenticate.");
+      authShell.classList.add("hidden");
+      document.querySelector(".app").classList.remove("hidden");
+      document.querySelector("header h1").textContent = `Hi, ${data.user.name}`;
+    } catch (error) {
+      authMessage.textContent = error.message;
+    } finally {
+      authSubmit.disabled = false;
+    }
+  });
+
+  function addMessage(text, role) {
+    const div = document.createElement("div");
+    div.className = `msg ${role}`;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  addMessage(
+    "Hi, I'm Tristan, your health care assistant. I'm here to help you understand health topics and figure out what kind of care might make sense. What's going on?",
+    "assistant"
+  );
+
+  // Check backend health on load and disable input if unreachable.
+  async function checkHealth() {
+    try {
+      const res = await fetch(HEALTH_URL);
+      if (!res.ok) throw new Error('unhealthy');
+      const data = await res.json();
+      if (data.status !== 'ok') throw new Error('unhealthy');
+      // backend healthy; nothing else to do
+    } catch (err) {
+      addMessage(
+        "Warning: backend server not reachable. Chat is disabled until you run the server at http://localhost:8000.",
+        "assistant"
+      );
+      input.disabled = true;
+      sendBtn.disabled = true;
+    }
+  }
+
+  checkHealth();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const message = input.value.trim();
+    if (!message) return;
+
+    addMessage(message, "user");
+    input.value = "";
+    sendBtn.disabled = true;
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId, message }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        let errText = text;
+        try {
+          const j = JSON.parse(text);
+          errText = j.detail || j.error || text;
+        } catch (e) {
+          // not JSON — keep raw text
+        }
+        addMessage("Server error: " + errText, "assistant");
+        return;
+      }
+
+      const data = await res.json();
+      addMessage(data.reply, "assistant");
+    } catch (err) {
+      addMessage("Network error: " + (err.message || err), "assistant");
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  });
+</script>
+</body>
+</html>
